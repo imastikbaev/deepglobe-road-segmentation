@@ -72,6 +72,16 @@ def encode_mask(mask: np.ndarray) -> str:
     return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
+def remove_small_components(mask: np.ndarray, minimum_fraction: float = 0.0015) -> np.ndarray:
+    minimum_area = max(16, int(mask.size * minimum_fraction))
+    component_count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    cleaned = np.zeros_like(mask)
+    for component in range(1, component_count):
+        if stats[component, cv2.CC_STAT_AREA] >= minimum_area:
+            cleaned[labels == component] = 1
+    return cleaned
+
+
 def mask_to_contours(mask: np.ndarray) -> List[List[List[float]]]:
     contours, _ = cv2.findContours(mask * 255, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     height, width = mask.shape
@@ -122,14 +132,16 @@ def create_app(config_path: Path = DEFAULT_CONFIG) -> FastAPI:
         if dataset_path.is_file() and dataset_path.suffix.lower() == ".zip":
             with zipfile.ZipFile(dataset_path) as archive:
                 names = set(archive.namelist())
-                candidates = sorted(
+                labeled_candidates = sorted(
                     name
                     for name in names
                     if name.lower().endswith("_sat.jpg")
                     and name[:-8] + "_mask.png" in names
                 )
+                preferred = "test/7890_sat.jpg"
+                candidates = [preferred] if preferred in names else labeled_candidates
                 if not candidates:
-                    raise HTTPException(404, "No labeled demo image was found in the dataset ZIP.")
+                    raise HTTPException(404, "No demo image was found in the dataset ZIP.")
                 filename = Path(candidates[0]).name
                 contents = archive.read(candidates[0])
         elif dataset_path.is_dir():
@@ -179,6 +191,7 @@ def create_app(config_path: Path = DEFAULT_CONFIG) -> FastAPI:
             mask = service.predict(source, threshold)
         except FileNotFoundError as error:
             raise HTTPException(503, str(error)) from error
+        mask = remove_small_components(mask)
         contours = mask_to_contours(mask)
         elapsed_ms = round((time.perf_counter() - started) * 1000)
         return {

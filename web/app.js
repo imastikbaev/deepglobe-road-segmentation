@@ -52,18 +52,28 @@ function selectFile(file) {
 }
 
 function syncOverlaySize() {
-  const rect = sourceImage.getBoundingClientRect();
-  const wrap = canvasWrap.getBoundingClientRect();
-  const left = rect.left - wrap.left;
-  const top = rect.top - wrap.top;
+  if (!sourceImage.naturalWidth || !sourceImage.naturalHeight) return;
+  const wrapWidth = canvasWrap.clientWidth;
+  const wrapHeight = canvasWrap.clientHeight;
+  const scale = Math.min(
+    wrapWidth / sourceImage.naturalWidth,
+    wrapHeight / sourceImage.naturalHeight,
+  );
+  const width = Math.round(sourceImage.naturalWidth * scale);
+  const height = Math.round(sourceImage.naturalHeight * scale);
+  const left = Math.round((wrapWidth - width) / 2);
+  const top = Math.round((wrapHeight - height) / 2);
+
+  sourceImage.style.width = `${width}px`;
+  sourceImage.style.height = `${height}px`;
   [maskImage, lineCanvas].forEach((layer) => {
     layer.style.left = `${left}px`;
     layer.style.top = `${top}px`;
-    layer.style.width = `${rect.width}px`;
-    layer.style.height = `${rect.height}px`;
+    layer.style.width = `${width}px`;
+    layer.style.height = `${height}px`;
   });
-  lineCanvas.width = Math.max(1, Math.round(rect.width * devicePixelRatio));
-  lineCanvas.height = Math.max(1, Math.round(rect.height * devicePixelRatio));
+  lineCanvas.width = Math.max(1, Math.round(width * devicePixelRatio));
+  lineCanvas.height = Math.max(1, Math.round(height * devicePixelRatio));
   drawContours();
 }
 
