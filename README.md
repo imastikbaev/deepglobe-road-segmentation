@@ -98,6 +98,16 @@ If a matching mask is next to an image, it is included in the visualization. Pre
 - `outputs/predicted_masks/`
 - `outputs/visualizations/`
 
+## Local web platform
+
+Start the interactive RoadLens interface:
+
+```bash
+python src/web_app.py --config configs/config.yaml --port 8000
+```
+
+Then open [http://127.0.0.1:8000](http://127.0.0.1:8000). Upload a satellite image, adjust the probability threshold, and run analysis. The result can be viewed as adjustable geometric road contours, a translucent segmentation mask, or both. Processing stays on the local machine and requires `outputs/checkpoints/best_model.pth`.
+
 ## Metrics
 
 - **IoU / Jaccard:** road-pixel intersection divided by union.
