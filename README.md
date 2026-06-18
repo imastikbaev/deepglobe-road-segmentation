@@ -53,6 +53,12 @@ dataset:
 python src/train.py --config configs/config.yaml
 ```
 
+Resume from the best checkpoint, optionally with a lower learning rate:
+
+```bash
+python src/train.py --config configs/config.yaml --resume --learning-rate 0.0005
+```
+
 Training uses:
 
 - a four-level U-Net with one-channel logits
@@ -104,17 +110,17 @@ Metrics are accumulated from global true-positive, false-positive, false-negativ
 
 ## Baseline training result
 
-The baseline was trained on the reproducible split from all 6,226 labeled pairs. The best checkpoint was selected at epoch 4 by validation IoU and evaluated once on the held-out test split of 624 images:
+The baseline was trained on the reproducible split from all 6,226 labeled pairs. Training was resumed from the first run with a reduced learning rate of `0.0005`. The best checkpoint was selected at epoch 5 by validation IoU and evaluated on the held-out test split of 624 images:
 
 | Metric | Test result |
 |---|---:|
-| IoU / Jaccard | 0.4095 |
-| Dice / F1 | 0.5811 |
-| Precision | 0.6651 |
-| Recall | 0.5159 |
-| Pixel accuracy | 0.9679 |
+| IoU / Jaccard | 0.4520 |
+| Dice / F1 | 0.6225 |
+| Precision | 0.6152 |
+| Recall | 0.6301 |
+| Pixel accuracy | 0.9670 |
 
-This run used 256×256 inputs, `base_channels: 32`, batch size 8, threshold 0.5, and an Apple M2 GPU. Pixel accuracy is high partly because background pixels dominate the images; IoU and Dice are the more informative road-segmentation scores. The machine began thermal/memory throttling after five completed epochs, so this is an initial baseline rather than a fully converged result.
+This run used 256×256 inputs, `base_channels: 32`, batch size 8, threshold 0.5, and an Apple M2 GPU. Pixel accuracy is high partly because background pixels dominate the images; IoU and Dice are the more informative road-segmentation scores. Validation IoU peaked at `0.4527` on epoch 5 and remained below that score on epochs 6 and 7, so the best checkpoint was retained.
 
 ## Outputs
 

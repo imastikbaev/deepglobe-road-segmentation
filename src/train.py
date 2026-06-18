@@ -60,6 +60,17 @@ def run_epoch(model, loader, criterion, device, threshold, optimizer=None):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/config.yaml")
+    parser.add_argument(
+        "--resume",
+        nargs="?",
+        const="best",
+        help="Resume from a checkpoint path, or use --resume for outputs/checkpoints/best_model.pth.",
+    )
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        help="Override the configured learning rate, including after restoring optimizer state.",
+    )
     args = parser.parse_args()
     config = load_config(args.config)
     set_seed(config["random_seed"])
@@ -89,11 +100,42 @@ def main() -> None:
     monitor = config["training"].get("monitor", "iou")
     patience = config["training"].get("early_stopping_patience", 10)
     best_score, stale_epochs = -1.0, 0
+    start_epoch = 1
     best_path = checkpoint_dir / "best_model.pth"
     history = []
     log_path = output_dir / "training_log.csv"
 
-    for epoch in range(1, config["training"]["epochs"] + 1):
+    if args.resume:
+        resume_path = best_path if args.resume == "best" else Path(args.resume).expanduser()
+        if not resume_path.is_file():
+            raise FileNotFoundError(f"Resume checkpoint not found: {resume_path}")
+        checkpoint = torch.load(resume_path, map_location=device, weights_only=False)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        if "optimizer_state_dict" in checkpoint:
+            optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        if "scheduler_state_dict" in checkpoint:
+            scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        start_epoch = int(checkpoint["epoch"]) + 1
+        best_score = float(checkpoint.get("best_score", -1.0))
+        stale_epochs = int(checkpoint.get("stale_epochs", 0))
+        if log_path.is_file():
+            with log_path.open(newline="", encoding="utf-8") as handle:
+                history = [
+                    row
+                    for row in csv.DictReader(handle)
+                    if int(row["epoch"]) < start_epoch
+                ]
+        print(
+            f"Resuming from {resume_path} at epoch {start_epoch}; "
+            f"best {monitor}={best_score:.4f}"
+        )
+
+    if args.learning_rate is not None:
+        for group in optimizer.param_groups:
+            group["lr"] = args.learning_rate
+        print(f"Learning rate override: {args.learning_rate:g}")
+
+    for epoch in range(start_epoch, config["training"]["epochs"] + 1):
         start = time.time()
         train_metrics = run_epoch(model, loaders["train"], criterion, device, threshold, optimizer)
         val_metrics = run_epoch(model, loaders["val"], criterion, device, threshold)
@@ -124,8 +166,10 @@ def main() -> None:
                     "epoch": epoch,
                     "monitor": monitor,
                     "best_score": best_score,
+                    "stale_epochs": stale_epochs,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
+                    "scheduler_state_dict": scheduler.state_dict(),
                     "config": config,
                     "validation_metrics": val_metrics,
                 },

@@ -1,14 +1,15 @@
 {
-  "checkpoint_epoch": 4,
+  "checkpoint_epoch": 5,
   "test_samples": 624,
   "image_size": 256,
   "prediction_threshold": 0.5,
   "metrics": {
-    "iou": 0.40954454930888484,
-    "dice": 0.5811019587989454,
-    "precision": 0.6651418322404138,
-    "recall": 0.5159165242058439,
-    "pixel_accuracy": 0.9678897613134116
+    "iou": 0.45195590289598725,
+    "dice": 0.6225476985830523,
+    "precision": 0.6152079250853213,
+    "recall": 0.6300647219493491,
+    "pixel_accuracy": 0.9670175650180891
   },
-  "note": "Initial baseline. Best checkpoint selected by validation IoU after five completed training epochs."
+  "validation_iou": 0.4526913145321674,
+  "note": "Best checkpoint selected by validation IoU after resuming with learning rate 0.0005. Seven total epochs were completed."
 }
