@@ -1,0 +1,26 @@
+# External datasets and archives
+data/
+dataset/
+datasets/
+dataset_roads/
+*.zip
+
+# Generated outputs and model weights
+outputs/
+checkpoints/
+*.pt
+*.pth
+*.h5
+*.keras
+
+# Python/editor caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.DS_Store
+.idea/
+.vscode/
