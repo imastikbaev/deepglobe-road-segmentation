@@ -1,0 +1,14 @@
+{
+  "checkpoint_epoch": 4,
+  "test_samples": 624,
+  "image_size": 256,
+  "prediction_threshold": 0.5,
+  "metrics": {
+    "iou": 0.40954454930888484,
+    "dice": 0.5811019587989454,
+    "precision": 0.6651418322404138,
+    "recall": 0.5159165242058439,
+    "pixel_accuracy": 0.9678897613134116
+  },
+  "note": "Initial baseline. Best checkpoint selected by validation IoU after five completed training epochs."
+}
