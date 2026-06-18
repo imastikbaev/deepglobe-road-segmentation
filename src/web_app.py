@@ -101,7 +101,7 @@ def mask_to_contours(mask: np.ndarray) -> List[List[List[float]]]:
 
 
 def create_app(config_path: Path = DEFAULT_CONFIG) -> FastAPI:
-    app = FastAPI(title="RoadLens", version="1.0")
+    app = FastAPI(title="DeepGlobe Road Segmentation", version="1.0")
     service = ModelService(config_path)
 
     @app.get("/")
@@ -214,7 +214,7 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the local RoadLens web platform.")
+    parser = argparse.ArgumentParser(description="Run the local road segmentation test interface.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)

@@ -1,9 +1,8 @@
 random_seed: 42
 
 dataset:
-  # May point to the extracted dataset directory OR directly to dataset_roads.zip.
-  # Keep this external to the Git repository.
-  path: "/Users/insarek/Documents/work/1task(roads)/dataset_roads.zip"
+  # Extracted dataset directory or the original ZIP. Keep it outside Git.
+  path: "data/dataset_roads.zip"
   image_size: 256
   mask_threshold: 128
   split:

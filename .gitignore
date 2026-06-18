@@ -24,3 +24,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Optional machine-specific configuration
+configs/config.local.yaml
