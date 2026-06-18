@@ -12,24 +12,18 @@ const canvasWrap = $("#canvasWrap");
 const analyzeButton = $("#analyzeButton");
 const processing = $("#processing");
 const errorMessage = $("#errorMessage");
-const metrics = $("#metrics");
 
 let selectedFile = null;
 let contours = [];
 let lineColor = "#00ff88";
 
 async function checkStatus() {
-  const status = $("#modelStatus");
   try {
     const response = await fetch("/api/status");
     const data = await response.json();
-    status.className = `status ${data.ready ? "ready" : "error"}`;
-    status.lastElementChild.textContent = data.ready
-      ? `Модель готова · ${data.device.toUpperCase()}`
-      : "Checkpoint не найден";
+    if (!data.ready) errorMessage.textContent = "Checkpoint модели не найден.";
   } catch {
-    status.className = "status error";
-    status.lastElementChild.textContent = "Сервер недоступен";
+    errorMessage.textContent = "Сервер недоступен.";
   }
 }
 
@@ -43,7 +37,6 @@ function selectFile(file) {
   $("#fileName").textContent = file.name;
   dropZone.hidden = true;
   resultView.hidden = false;
-  metrics.hidden = true;
   maskImage.removeAttribute("src");
   contours = [];
   analyzeButton.disabled = false;
@@ -80,9 +73,9 @@ function syncOverlaySize() {
 function drawContours() {
   const context = lineCanvas.getContext("2d");
   context.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
-  if (!$("#showLines").checked || !contours.length) return;
+  if (!contours.length) return;
   context.strokeStyle = lineColor;
-  context.lineWidth = Number($("#lineWidth").value) * devicePixelRatio;
+  context.lineWidth = 3 * devicePixelRatio;
   context.lineJoin = "round";
   context.lineCap = "round";
   context.shadowColor = lineColor;
@@ -106,20 +99,15 @@ async function analyze() {
   errorMessage.textContent = "";
   const body = new FormData();
   body.append("image", selectedFile);
-  body.append("threshold", $("#threshold").value);
+  body.append("threshold", "0.5");
   try {
     const response = await fetch("/api/predict", { method: "POST", body });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "Не удалось обработать изображение.");
     contours = data.contours;
     maskImage.src = data.mask_overlay;
-    maskImage.style.opacity = Number($("#maskOpacity").value) / 100;
-    maskImage.style.display = $("#showMask").checked ? "block" : "none";
-    $("#coverageMetric").textContent = `${data.road_coverage}%`;
-    $("#contourMetric").textContent = data.contour_count;
-    $("#timeMetric").textContent = `${data.inference_ms} мс`;
-    $("#sizeMetric").textContent = `${data.width}×${data.height}`;
-    metrics.hidden = false;
+    maskImage.style.opacity = 0.35;
+    maskImage.style.display = "block";
     syncOverlaySize();
   } catch (error) {
     errorMessage.textContent = error.message;
@@ -161,28 +149,6 @@ analyzeButton.addEventListener("click", analyze);
   dropZone.classList.remove("dragging");
 }));
 dropZone.addEventListener("drop", (event) => selectFile(event.dataTransfer.files[0]));
-
-$("#threshold").addEventListener("input", (event) => {
-  $("#thresholdOutput").textContent = Number(event.target.value).toFixed(2);
-});
-$("#lineWidth").addEventListener("input", (event) => {
-  $("#widthOutput").textContent = `${event.target.value} px`;
-  drawContours();
-});
-$("#maskOpacity").addEventListener("input", (event) => {
-  $("#opacityOutput").textContent = `${event.target.value}%`;
-  maskImage.style.opacity = Number(event.target.value) / 100;
-});
-$("#showLines").addEventListener("change", drawContours);
-$("#showMask").addEventListener("change", (event) => {
-  maskImage.style.display = event.target.checked ? "block" : "none";
-});
-document.querySelectorAll(".swatch").forEach((swatch) => swatch.addEventListener("click", () => {
-  document.querySelectorAll(".swatch").forEach((item) => item.classList.remove("active"));
-  swatch.classList.add("active");
-  lineColor = swatch.dataset.color;
-  drawContours();
-}));
 
 window.addEventListener("resize", syncOverlaySize);
 checkStatus();

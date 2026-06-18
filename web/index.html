@@ -10,10 +10,6 @@
   <main>
     <header class="page-header">
       <h1>Тест сегментации дорог</h1>
-      <div id="modelStatus" class="status" aria-live="polite">
-        <span class="status-dot"></span>
-        <span>Проверяю модель…</span>
-      </div>
     </header>
 
     <section class="workspace">
@@ -37,62 +33,15 @@
           </div>
           <div class="viewer-footer">
             <strong id="fileName">—</strong>
-            <button id="replaceButton" class="secondary-button" type="button">Другой файл</button>
+            <div class="result-actions">
+              <button id="analyzeButton" class="primary-button" type="button" disabled>Запустить модель</button>
+              <button id="replaceButton" class="secondary-button" type="button">Другой файл</button>
+            </div>
           </div>
         </div>
       </div>
-
-      <aside class="control-panel">
-        <h2>Настройки</h2>
-
-        <label class="control">
-          <span>Порог <output id="thresholdOutput">0.50</output></span>
-          <input id="threshold" type="range" min="0.20" max="0.80" step="0.05" value="0.50">
-        </label>
-
-        <label class="control">
-          <span>Толщина линий <output id="widthOutput">3 px</output></span>
-          <input id="lineWidth" type="range" min="1" max="8" step="1" value="3">
-        </label>
-
-        <label class="control">
-          <span>Прозрачность маски <output id="opacityOutput">35%</output></span>
-          <input id="maskOpacity" type="range" min="0" max="100" step="5" value="35">
-        </label>
-
-        <div class="color-control">
-          <span>Цвет линий</span>
-          <div class="swatches" role="radiogroup" aria-label="Цвет линий">
-            <button class="swatch active" data-color="#00ff88" style="--swatch:#00ff88" aria-label="Зелёный"></button>
-            <button class="swatch" data-color="#ffff00" style="--swatch:#ffff00" aria-label="Жёлтый"></button>
-            <button class="swatch" data-color="#ff3030" style="--swatch:#ff3030" aria-label="Красный"></button>
-            <button class="swatch" data-color="#ffffff" style="--swatch:#ffffff" aria-label="Белый"></button>
-          </div>
-        </div>
-
-        <label class="check-row">
-          <input id="showLines" type="checkbox" checked>
-          Показывать линии
-        </label>
-
-        <label class="check-row">
-          <input id="showMask" type="checkbox" checked>
-          Показывать маску
-        </label>
-
-        <button id="analyzeButton" class="primary-button analyze-button" type="button" disabled>
-          Запустить модель
-        </button>
-        <p id="errorMessage" class="error-message" role="alert"></p>
-      </aside>
     </section>
-
-    <section id="metrics" class="metrics" hidden>
-      <div><span>Доля дорог</span><strong id="coverageMetric">—</strong></div>
-      <div><span>Контуры</span><strong id="contourMetric">—</strong></div>
-      <div><span>Время</span><strong id="timeMetric">—</strong></div>
-      <div><span>Размер</span><strong id="sizeMetric">—</strong></div>
-    </section>
+    <p id="errorMessage" class="error-message" role="alert"></p>
   </main>
   <script src="/app.js"></script>
 </body>
