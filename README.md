@@ -2,9 +2,7 @@
 
 U-Net pipeline for detecting roads in satellite images with binary semantic segmentation.
 
-The repository includes training, evaluation, batch prediction, and a small local web interface for visually testing a trained model.
-
-![Local road segmentation interface](docs/web-interface.png)
+The repository includes dataset loading, training, evaluation, and batch prediction for a clean model-only workflow.
 
 ## What it does
 
@@ -13,8 +11,7 @@ The repository includes training, evaluation, batch prediction, and a small loca
 - creates a reproducible 80/10/10 train/validation/test split;
 - trains a four-level U-Net with BCE + Dice loss;
 - reports IoU, Dice, precision, recall, and pixel accuracy;
-- predicts masks for individual images or folders;
-- displays predicted road areas and contours in a local browser.
+- predicts masks for individual images or folders.
 
 This is **semantic segmentation**, not object detection: the model assigns every pixel to either road or background instead of drawing bounding boxes.
 
@@ -49,10 +46,8 @@ See [MODEL_CARD.md](MODEL_CARD.md) for training details, intended use, and limit
 │   ├── model.py
 │   ├── predict.py
 │   ├── train.py
-│   ├── utils.py
-│   └── web_app.py
+│   └── utils.py
 ├── tests/
-├── web/
 ├── requirements.txt
 └── requirements-dev.txt
 ```
@@ -114,16 +109,6 @@ outputs/checkpoints/best_model.pth
 ```
 
 You can produce it by training the model, or download `best_model.pth` from the latest GitHub Release and place it in that directory.
-
-## Local test interface
-
-```bash
-python src/web_app.py --config configs/config.local.yaml --port 8000
-```
-
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000), upload an image, and click **Run model**. Processing is performed locally; uploaded images are not stored by the server.
-
-The optional demo button reads a sample directly from the configured external dataset.
 
 ## Training
 
@@ -195,7 +180,6 @@ pytest
 - Inputs are resized to 256×256, which can remove fine road detail.
 - Masks are resized with nearest-neighbor interpolation and binarized at 128.
 - The split is deterministic with seed 42 and stored in `outputs/splits.json`.
-- The web interface removes very small disconnected predictions for clearer visualization. Raw batch predictions are not post-processed.
 
 ## License
 

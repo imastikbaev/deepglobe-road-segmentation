@@ -53,7 +53,3 @@ Exact test values are stored in [results/test_metrics.json](results/test_metrics
 - Results can degrade on imagery from different sensors, regions, seasons, or resolutions.
 - Output masks do not guarantee topological road connectivity.
 - The model should not be used for safety-critical routing or autonomous navigation.
-
-## Post-processing
-
-The browser interface removes very small disconnected components and draws mask boundaries as geometric contours. This affects presentation only. CLI prediction and reported metrics use the raw thresholded model output.
