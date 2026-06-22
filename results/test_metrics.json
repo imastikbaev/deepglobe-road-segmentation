@@ -1,15 +1,34 @@
 {
-  "checkpoint_epoch": 5,
-  "test_samples": 624,
+  "release": "v1.0-uavid",
+  "checkpoint": "best_model_uavid_finetuned_iou7168.pth",
+  "checkpoint_sha256": "32fd1735b805f27bf31048f14a276ff3c3d5cba78b7ca2f63c6d49ea6dea1468",
+  "architecture": "U-Net",
+  "base_channels": 32,
+  "dataset": "UAVid binary road masks",
+  "random_seed": 42,
   "image_size": 256,
   "prediction_threshold": 0.5,
-  "metrics": {
-    "iou": 0.45195590289598725,
-    "dice": 0.6225476985830523,
-    "precision": 0.6152079250853213,
-    "recall": 0.6300647219493491,
-    "pixel_accuracy": 0.9670175650180891
+  "split_counts": {
+    "train": 536,
+    "validation": 67,
+    "test": 67
   },
-  "validation_iou": 0.4526913145321674,
-  "note": "Best checkpoint selected by validation IoU after resuming with learning rate 0.0005. Seven total epochs were completed."
+  "best_epoch": 47,
+  "validation": {
+    "iou": 0.6997659828718217,
+    "dice": 0.8233674398984494,
+    "precision": 0.7895931457463758,
+    "recall": 0.8601601899755064,
+    "pixel_accuracy": 0.9588019527605892,
+    "loss": 0.20505043508401558
+  },
+  "test": {
+    "iou": 0.7168,
+    "dice": 0.8350,
+    "precision": 0.8149,
+    "recall": 0.8561,
+    "pixel_accuracy": 0.9550,
+    "loss": 0.1963
+  },
+  "note": "U-Net with base_channels=32, pretrained on DeepGlobe and fine-tuned on UAVid. The best checkpoint was selected by validation IoU."
 }

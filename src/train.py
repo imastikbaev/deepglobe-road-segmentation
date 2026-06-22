@@ -1,4 +1,4 @@
-"""Train U-Net on reproducibly split DeepGlobe labeled pairs."""
+"""Train U-Net on reproducibly split road image/mask pairs."""
 
 from __future__ import annotations
 

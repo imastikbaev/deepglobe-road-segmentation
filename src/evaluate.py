@@ -18,6 +18,10 @@ from utils import get_device, load_checkpoint, load_config, save_json, set_seed
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/config.yaml")
+    parser.add_argument(
+        "--checkpoint",
+        help="Checkpoint path. Defaults to <output_dir>/checkpoints/best_model.pth.",
+    )
     args = parser.parse_args()
     config = load_config(args.config)
     set_seed(config["random_seed"])
@@ -32,7 +36,11 @@ def main() -> None:
     )
     device = get_device(config["training"].get("device", "auto"))
     model = build_model(config).to(device)
-    checkpoint_path = output_dir / "checkpoints" / "best_model.pth"
+    checkpoint_path = (
+        Path(args.checkpoint).expanduser()
+        if args.checkpoint
+        else output_dir / "checkpoints" / "best_model.pth"
+    )
     checkpoint = load_checkpoint(model, checkpoint_path, device)
     model.eval()
     metrics = BinarySegmentationMetrics(config["training"].get("threshold", 0.5))

@@ -1,4 +1,4 @@
-"""DeepGlobe image/mask discovery, reproducible splits, and PyTorch datasets."""
+"""Road image/mask discovery, reproducible splits, and PyTorch datasets."""
 
 from __future__ import annotations
 
@@ -33,8 +33,8 @@ def discover_pairs(dataset_path: str) -> List[SamplePair]:
     if not root.exists():
         raise FileNotFoundError(
             f"Dataset path does not exist: {root}\n"
-            "Set dataset.path in configs/config.yaml to an extracted dataset folder "
-            "or directly to dataset_roads.zip."
+            "Set dataset.path in the selected config to an extracted dataset folder "
+            "or a ZIP containing paired files."
         )
 
     if _is_zip(root):
@@ -151,7 +151,7 @@ class PairedAugment:
         return image, mask
 
 
-class DeepGlobeDataset(Dataset):
+class RoadSegmentationDataset(Dataset):
     def __init__(
         self,
         dataset_path: str,
@@ -205,7 +205,9 @@ class DeepGlobeDataset(Dataset):
         }
 
 
-def build_datasets(config: dict) -> Tuple[Dict[str, DeepGlobeDataset], Dict[str, List[SamplePair]]]:
+def build_datasets(
+    config: dict,
+) -> Tuple[Dict[str, RoadSegmentationDataset], Dict[str, List[SamplePair]]]:
     dataset_cfg = config["dataset"]
     output_dir = Path(config["paths"]["output_dir"])
     pairs = discover_pairs(dataset_cfg["path"])
@@ -230,8 +232,8 @@ def build_datasets(config: dict) -> Tuple[Dict[str, DeepGlobeDataset], Dict[str,
         "mask_threshold": dataset_cfg.get("mask_threshold", 128),
     }
     datasets = {
-        "train": DeepGlobeDataset(pairs=splits["train"], augment=train_augment, **common),
-        "val": DeepGlobeDataset(pairs=splits["val"], **common),
-        "test": DeepGlobeDataset(pairs=splits["test"], **common),
+        "train": RoadSegmentationDataset(pairs=splits["train"], augment=train_augment, **common),
+        "val": RoadSegmentationDataset(pairs=splits["val"], **common),
+        "test": RoadSegmentationDataset(pairs=splits["test"], **common),
     }
     return datasets, splits

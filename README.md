@@ -1,36 +1,44 @@
-# DeepGlobe Road Segmentation
+# U-Net Road Segmentation: DeepGlobe → UAVid
 
-U-Net pipeline for detecting roads in satellite images with binary semantic segmentation.
+Binary semantic segmentation of roads in satellite and UAV imagery using a
+four-level U-Net. The released checkpoint uses `base_channels=32`: it was
+pretrained on DeepGlobe and fine-tuned on binary road masks derived from UAVid.
 
-The repository includes dataset loading, training, evaluation, and batch prediction for a clean model-only workflow.
+## Released model
 
-## What it does
+**[Download `best_model_uavid_finetuned_iou7168.pth`](https://github.com/imastikbaev/deepglobe-road-segmentation/releases/download/v1.0-uavid/best_model_uavid_finetuned_iou7168.pth)**
 
-- pairs DeepGlobe files named `*_sat.jpg` and `*_mask.png`;
-- ignores images without masks during training;
-- creates a reproducible 80/10/10 train/validation/test split;
-- trains a four-level U-Net with BCE + Dice loss;
-- reports IoU, Dice, precision, recall, and pixel accuracy;
-- predicts masks for individual images or folders.
+Release: [UAVid Fine-tuned Road Segmentation Model](https://github.com/imastikbaev/deepglobe-road-segmentation/releases/tag/v1.0-uavid)
 
-This is **semantic segmentation**, not object detection: the model assigns every pixel to either road or background instead of drawing bounding boxes.
-
-## Results
-
-The U-Net (`base_channels=32`) checkpoint was fine-tuned on UAVid and selected
-by validation IoU.
-
-| Metric | Test score |
+| Metric | UAVid test score |
 |---|---:|
-| IoU / Jaccard | 0.7168 |
-| Dice / F1 | 0.8350 |
-| Precision | 0.8149 |
-| Recall | 0.8561 |
-| Pixel accuracy | 0.9550 |
+| IoU / Jaccard | **0.7168** |
+| Dice / F1 | **0.8350** |
+| Precision | **0.8149** |
+| Recall | **0.8561** |
+| Pixel accuracy | **0.9550** |
+| BCE + Dice loss | **0.1963** |
 
-Pixel accuracy is inflated by the large amount of background, so IoU and Dice are the primary quality indicators.
+The best checkpoint was selected at epoch 47 with validation IoU `0.6998` and
+validation Dice `0.8234`. IoU and Dice are the primary quality indicators;
+pixel accuracy is less informative because background pixels dominate the data.
 
-See [MODEL_CARD.md](MODEL_CARD.md) for training details, intended use, and limitations.
+See [MODEL_CARD.md](MODEL_CARD.md) for training details, intended use, and
+limitations. Machine-readable results are in
+[results/test_metrics.json](results/test_metrics.json).
+
+## Features
+
+- deterministic train/validation/test splits;
+- paired image and mask augmentation;
+- BCE + Dice training loss;
+- IoU, Dice, precision, recall, and pixel-accuracy evaluation;
+- checkpoint resume and learning-rate override;
+- prediction for one image or an entire folder;
+- CPU, CUDA, and Apple Silicon MPS support.
+
+This is semantic segmentation, not object detection: every pixel is classified
+as road or background.
 
 ## Repository structure
 
@@ -50,9 +58,13 @@ See [MODEL_CARD.md](MODEL_CARD.md) for training details, intended use, and limit
 │   ├── train.py
 │   └── utils.py
 ├── tests/
+├── MODEL_CARD.md
 ├── requirements.txt
 └── requirements-dev.txt
 ```
+
+Model weights, datasets, generated predictions, and other large artifacts are
+excluded from Git by `.gitignore`.
 
 ## Installation
 
@@ -67,109 +79,90 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-On Windows, activate the environment with:
+On Windows:
 
 ```powershell
 .venv\Scripts\activate
 ```
 
-## Dataset configuration
+## Dataset preparation
 
-The dataset is intentionally not stored in Git.
-
-Create a machine-specific configuration so your local path does not modify the tracked example:
-
-```bash
-cp configs/config.yaml configs/config.local.yaml
-```
-
-Set `dataset.path` in `configs/config.local.yaml` to either:
-
-- the extracted DeepGlobe dataset directory; or
-- the original dataset ZIP.
-
-```yaml
-dataset:
-  path: "data/dataset_roads.zip"
-```
-
-Expected labeled pairs:
+The loader expects paired files:
 
 ```text
-100034_sat.jpg
-100034_mask.png
+sample_sat.jpg
+sample_mask.png
 ```
 
-Images without a matching mask are available for prediction but are excluded from training and evaluation.
+For the released model, UAVid road-class pixels (`RGB 128, 64, 128`) were
+converted to binary masks and saved in this format. The resulting 670 labeled
+pairs were split deterministically with seed 42:
 
-## Trained checkpoint
+| Split | Images |
+|---|---:|
+| Train | 536 |
+| Validation | 67 |
+| Test | 67 |
 
-The application expects:
+Place the prepared data outside Git, for example at
+`data/uavid_binary_roads/`. The dataset directory and archives are ignored.
+
+## Use the released checkpoint
+
+Download the checkpoint:
+
+```bash
+mkdir -p outputs/uavid/checkpoints
+curl -L \
+  https://github.com/imastikbaev/deepglobe-road-segmentation/releases/download/v1.0-uavid/best_model_uavid_finetuned_iou7168.pth \
+  -o outputs/uavid/checkpoints/best_model_uavid_finetuned_iou7168.pth
+```
+
+SHA-256:
 
 ```text
-outputs/checkpoints/best_model.pth
-```
-
-You can produce it by training the model, or download
-`best_model_uavid_finetuned_iou7168.pth` from the `v1.0-uavid` GitHub Release
-and place it in that directory.
-
-## Training
-
-```bash
-python src/train.py --config configs/config.local.yaml
-```
-
-Resume from the best checkpoint:
-
-```bash
-python src/train.py \
-  --config configs/config.local.yaml \
-  --resume \
-  --learning-rate 0.0005
-```
-
-Training outputs are saved under `outputs/`:
-
-```text
-outputs/
-├── checkpoints/best_model.pth
-├── metrics.json
-├── splits.json
-├── training_history.json
-└── training_log.csv
-```
-
-## Evaluation
-
-```bash
-python src/evaluate.py --config configs/config.local.yaml
+32fd1735b805f27bf31048f14a276ff3c3d5cba78b7ca2f63c6d49ea6dea1468
 ```
 
 ## Prediction
 
-Single image:
-
 ```bash
 python src/predict.py \
-  --config configs/config.local.yaml \
-  --input path/to/image.jpg
-```
-
-Folder:
-
-```bash
-python src/predict.py \
-  --config configs/config.local.yaml \
-  --input path/to/images/
+  --config configs/config.uavid_finetune.yaml \
+  --checkpoint outputs/uavid/checkpoints/best_model_uavid_finetuned_iou7168.pth \
+  --input path/to/image-or-folder
 ```
 
 Predicted masks and comparison images are written to:
 
 ```text
-outputs/predicted_masks/
-outputs/visualizations/
+outputs/uavid/predicted_masks/
+outputs/uavid/visualizations/
 ```
+
+## Evaluation
+
+After setting `dataset.path` in `configs/config.uavid_finetune.yaml`:
+
+```bash
+python src/evaluate.py \
+  --config configs/config.uavid_finetune.yaml \
+  --checkpoint outputs/uavid/checkpoints/best_model_uavid_finetuned_iou7168.pth
+```
+
+## Reproduce fine-tuning
+
+The released run resumed from a DeepGlobe checkpoint and used a learning rate
+of `5e-5`:
+
+```bash
+python src/train.py \
+  --config configs/config.uavid_finetune.yaml \
+  --resume path/to/deepglobe_checkpoint.pth \
+  --learning-rate 0.00005
+```
+
+Training outputs are saved under `outputs/uavid/`.
 
 ## Development checks
 
@@ -179,11 +172,12 @@ python -m compileall -q src
 pytest
 ```
 
-## Notes
+## Limitations
 
-- Inputs are resized to 256×256, which can remove fine road detail.
-- Masks are resized with nearest-neighbor interpolation and binarized at 128.
-- The split is deterministic with seed 42 and stored in `outputs/splits.json`.
+- Inputs are resized to `256×256`, which can remove narrow-road detail.
+- Results may degrade across sensors, regions, seasons, and flight altitudes.
+- Masks do not guarantee topological road connectivity.
+- The model is not intended for safety-critical routing or autonomous driving.
 
 ## License
 

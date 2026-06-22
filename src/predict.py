@@ -62,6 +62,10 @@ def save_visualization(image: Image.Image, prediction: Image.Image, ground_truth
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/config.yaml")
+    parser.add_argument(
+        "--checkpoint",
+        help="Checkpoint path. Defaults to <output_dir>/checkpoints/best_model.pth.",
+    )
     parser.add_argument("--input", required=True, help="Image file or folder")
     args = parser.parse_args()
     config = load_config(args.config)
@@ -73,7 +77,12 @@ def main() -> None:
 
     device = get_device(config["training"].get("device", "auto"))
     model = build_model(config).to(device)
-    load_checkpoint(model, output_dir / "checkpoints" / "best_model.pth", device)
+    checkpoint_path = (
+        Path(args.checkpoint).expanduser()
+        if args.checkpoint
+        else output_dir / "checkpoints" / "best_model.pth"
+    )
+    load_checkpoint(model, checkpoint_path, device)
     model.eval()
     image_size = config["dataset"].get("image_size", 256)
     threshold = config["training"].get("threshold", 0.5)

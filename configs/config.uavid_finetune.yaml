@@ -1,7 +1,8 @@
 random_seed: 42
 
 dataset:
-  path: /kaggle/working/uavid_binary_roads
+  # Directory containing paired *_sat.jpg and *_mask.png files.
+  path: data/uavid_binary_roads
   image_size: 256
   mask_threshold: 128
   split:
@@ -35,4 +36,4 @@ training:
   early_stopping_patience: 5
 
 paths:
-  output_dir: /kaggle/working/outputs_uavid
+  output_dir: outputs/uavid
