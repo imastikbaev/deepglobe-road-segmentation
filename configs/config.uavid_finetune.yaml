@@ -1,0 +1,38 @@
+random_seed: 42
+
+dataset:
+  path: /kaggle/working/uavid_binary_roads
+  image_size: 256
+  mask_threshold: 128
+  split:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+
+model:
+  in_channels: 3
+  base_channels: 32
+
+loss:
+  bce_weight: 0.5
+  dice_weight: 0.5
+
+augmentation:
+  horizontal_flip: 0.5
+  vertical_flip: 0.5
+  rotation_degrees: 20
+  brightness_contrast: 0.2
+
+training:
+  epochs: 48
+  batch_size: 2
+  learning_rate: 5.0e-05
+  weight_decay: 0.0001
+  num_workers: 2
+  device: auto
+  threshold: 0.5
+  monitor: iou
+  early_stopping_patience: 5
+
+paths:
+  output_dir: /kaggle/working/outputs_uavid

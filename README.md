@@ -17,15 +17,16 @@ This is **semantic segmentation**, not object detection: the model assigns every
 
 ## Results
 
-The current checkpoint was selected by validation IoU and evaluated on 624 held-out labeled images.
+The U-Net (`base_channels=32`) checkpoint was fine-tuned on UAVid and selected
+by validation IoU.
 
 | Metric | Test score |
 |---|---:|
-| IoU / Jaccard | 0.4520 |
-| Dice / F1 | 0.6225 |
-| Precision | 0.6152 |
-| Recall | 0.6301 |
-| Pixel accuracy | 0.9670 |
+| IoU / Jaccard | 0.7168 |
+| Dice / F1 | 0.8350 |
+| Precision | 0.8149 |
+| Recall | 0.8561 |
+| Pixel accuracy | 0.9550 |
 
 Pixel accuracy is inflated by the large amount of background, so IoU and Dice are the primary quality indicators.
 
@@ -36,7 +37,8 @@ See [MODEL_CARD.md](MODEL_CARD.md) for training details, intended use, and limit
 ```text
 .
 ├── configs/
-│   └── config.yaml
+│   ├── config.yaml
+│   └── config.uavid_finetune.yaml
 ├── results/
 │   └── test_metrics.json
 ├── src/
@@ -108,7 +110,9 @@ The application expects:
 outputs/checkpoints/best_model.pth
 ```
 
-You can produce it by training the model, or download `best_model.pth` from the latest GitHub Release and place it in that directory.
+You can produce it by training the model, or download
+`best_model_uavid_finetuned_iou7168.pth` from the `v1.0-uavid` GitHub Release
+and place it in that directory.
 
 ## Training
 
