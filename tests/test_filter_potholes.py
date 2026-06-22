@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -114,6 +115,22 @@ def test_rejected_detection_keeps_overlap() -> None:
 
 def test_missing_image_in_mock_predictions() -> None:
     assert MOCK_PREDICTIONS.get("missing.jpg", []) == []
+
+
+def test_mock_predictions_contain_complete_provided_payloads() -> None:
+    expected = {
+        "83.jpg": (4, {"D40": 3, "D00": 1}),
+        "84.jpg": (8, {"D00": 7, "D10": 1}),
+        "85.jpg": (8, {"D00": 3, "D10": 1, "D40": 4}),
+        "86.jpg": (12, {"D00": 6, "D40": 3, "D10": 3}),
+        "87.jpg": (11, {"D00": 5, "D40": 4, "D10": 2}),
+    }
+    for filename, (total, class_counts) in expected.items():
+        detections = MOCK_PREDICTIONS[filename]
+        assert len(detections) == total
+        assert Counter(item["class_code"] for item in detections) == class_counts
+        assert all(len(item["bbox"]) == 4 for item in detections)
+        assert all(len(item["bbox_normalized"]) == 4 for item in detections)
 
 
 def test_empty_or_outside_bbox_is_rejected() -> None:
