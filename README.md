@@ -52,12 +52,14 @@ as road or background.
 ├── src/
 │   ├── dataset.py
 │   ├── evaluate.py
+│   ├── filter_potholes.py
 │   ├── metrics.py
 │   ├── model.py
 │   ├── predict.py
 │   ├── train.py
 │   └── utils.py
 ├── tests/
+├── mock_predictions.py
 ├── MODEL_CARD.md
 ├── requirements.txt
 └── requirements-dev.txt
@@ -149,6 +151,75 @@ python src/evaluate.py \
   --config configs/config.uavid_finetune.yaml \
   --checkpoint outputs/uavid/checkpoints/best_model_uavid_finetuned_iou7168.pth
 ```
+
+## Filter pothole detections by the road mask
+
+`src/filter_potholes.py` integrates the road-segmentation model with detector
+results from [`mock_predictions.py`](mock_predictions.py). It keeps only
+potholes (`class_code == "D40"` or `class_label == "Яма"`) whose bounding box
+contains enough segmented road pixels.
+
+Detector payloads must be keyed by the exact image filename:
+
+```python
+MOCK_PREDICTIONS = {
+    "83.jpg": [
+        {
+            "bbox": [x1, y1, x2, y2],
+            "class_code": "D40",
+            "confidence": 0.54,
+            "class_label": "Яма",
+            "bbox_normalized": [x1_norm, y1_norm, x2_norm, y2_norm],
+        }
+    ]
+}
+```
+
+All original detector fields are preserved. The filter adds:
+
+- `confidence`: the detector's confidence, copied without modification;
+- `road_overlap`: road pixels inside the normalized bbox divided by all pixels
+  inside that bbox on the model's `256×256` binary mask.
+
+`bbox_normalized` is required for overlap and visualization. It remains correct
+when detector coordinates refer to `4000×3000` but the loaded image has another
+resolution, such as `2048×1536`. The pixel-valued `bbox` is preserved in JSON
+but is not used for coordinate mapping.
+
+Run the integration:
+
+```bash
+python src/filter_potholes.py \
+  --config configs/config.uavid_finetune.yaml \
+  --checkpoint outputs/uavid/checkpoints/best_model_uavid_finetuned_iou7168.pth \
+  --input path/to/images \
+  --min-road-overlap 0.5 \
+  --output-dir outputs/filtered
+```
+
+`--min-road-overlap` accepts values from `0` to `1` and defaults to `0.5`.
+The model and configuration are loaded once, then all input images are
+processed directly in Python.
+
+Outputs:
+
+```text
+outputs/filtered/
+├── filtered_predictions.json
+├── road_masks/
+│   └── 83_road_mask.png
+└── visualizations/
+    └── 83_filtered.jpg
+```
+
+Road masks are saved at each source image's original resolution using nearest
+neighbor resizing. Visualizations contain a translucent green road mask, green
+boxes for accepted D40 detections, and red boxes for rejected D40 detections.
+D00 and D10 detections are not displayed.
+
+`mock_predictions.py` is an integration fixture. In production, replace its
+dictionary lookup with the real defect-detector call while keeping the same
+detection schema and filtering functions.
 
 ## Reproduce fine-tuning
 
